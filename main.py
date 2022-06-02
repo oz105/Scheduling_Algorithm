@@ -2,13 +2,6 @@ import pandas
 
 from Student import Student
 
-
-def custom_style(row):
-    color = 'yellow'
-    return pandas.Series('background-color: green', row.index)
-    #return ['background-color: %s' % color]*len(row.values)
-
-
 def create_list_students() -> list:
     students_object = []
 
@@ -20,7 +13,7 @@ def create_list_students() -> list:
         year = students_excel.iloc[row][5]
         city = students_excel.iloc[row][6]  # Hebrew
 
-        if year == 'א':
+        if year == 'א' or year == 'ד':
             flag_year = False
 
         elif year == 'ב':
@@ -29,24 +22,23 @@ def create_list_students() -> list:
         elif year == 'ג':
             experience_lst = experience_by_year.get("C")
 
-        else:
-            experience_lst = experience_by_year.get("D")
+        # else:
+        #     experience_lst = experience_by_year.get("D")
 
         if flag_year:
             student = Student(id_num, full_name, city, year, experience_lst, cities_less_50_km_heb.get(city))
             students_object.append(student)
-            #print(f"exexperience_lst of student id {id_num} is {experience_lst}")
 
     return students_object
 
 
-def write_comment(student): # This function is responsible for writing the column "הערות" in the output Excel
+def write_comment(student):  # This function is responsible for writing the column "הערות" in the output Excel
     if len(student.to_do) == 0:
         output_excel.at[row_of_output, 'הערות'] = "הסטודנט שובץ בהכל"
 
     else:
         size = num_of_exp_per_year.get(student.year)
-        if size == len(student.to_do): # this check if there is not scheduling at all
+        if size == len(student.to_do):  # this check if there is not scheduling at all
             output_excel.at[row_of_output, 'תעודת זהות'] = student.id_num
             output_excel.at[row_of_output, 'שם מלא'] = student.name
             output_excel.at[row_of_output, 'עיר מגורים'] = student.city
@@ -401,8 +393,10 @@ students = create_list_students()
 # Create an Output Excel
 
 data = {'תעודת זהות': [], 'שם מלא': [], 'שנה': [], 'עיר מגורים': [], 'התנסות א': [], 'בית חולים א': [], 'תאריכים א': [],
-     'התנסות ב': [], 'בית חולים ב': [], 'תאריכים ב': [], 'התנסות ג': [], 'בית חולים ג': [], 'תאריכים ג': [],
-     'התנסות ד': [], 'בית חולים ד': [], 'תאריכים ד': [], 'התנסות ה': [], 'בית חולים ה': [], 'תאריכים ה': [], 'הערות': [] }
+        'איש קשר אחראי א': [], 'התנסות ב': [], 'בית חולים ב': [], 'תאריכים ב': [], 'איש קשר אחראי ב': [],
+        'התנסות ג': [],
+        'בית חולים ג': [], 'תאריכים ג': [], 'איש קשר אחראי ג': [], 'התנסות ד': [], 'בית חולים ד': [], 'תאריכים ד': [],
+        'איש קשר אחראי ד': [], 'התנסות ה': [], 'בית חולים ה': [], 'תאריכים ה': [], 'איש קשר אחראי ה': [], 'הערות': []}
 
 output_excel = pandas.DataFrame(data)
 
@@ -419,7 +413,6 @@ output_excel.to_excel(writer, sheet_name='Sheet1', index=False)
 
 row_of_output = 1  # when we finish with a student we add 1
 
-
 for s in students:
 
     num_of_experience = 0  # start from zero until the length of the to do list in student object
@@ -429,75 +422,192 @@ for s in students:
         experience_host = hospitals_excel.iloc[row][2] + " - " + hospitals_excel.iloc[row][3]
         hospital = hospitals_excel.iloc[row][1]
         dates = hospitals_excel.iloc[row][6]
+        responsible_contact = hospitals_excel.iloc[row][8]
 
-        if city_host in s.list_of_potential_cities:
+        if dates not in s.exp_dates:
 
-            if experience_host in s.to_do:
+            if city_host in s.list_of_potential_cities:  # check if the city match to the dist of the student
 
-                if student_num > 0:
-                    print(f" id num is : {s.id_num}")
-                    print(f" the list exp is: {s.to_do}")
-                    flag = False
-                    #hospitals_excel.at[row, 'מספר סטודנטים'] = student_num - 1
-                    # hospitals_excel.to_excel("Hospitals.xlsx", index=False)
-                    output_excel.at[row_of_output, 'תעודת זהות'] = s.id_num
-                    output_excel.at[row_of_output, 'שם מלא'] = s.name
-                    output_excel.at[row_of_output, 'עיר מגורים'] = s.city
-                    output_excel.at[row_of_output, 'שנה'] = s.year
+                if experience_host in s.to_do:  # check if the student needs to do this experience
 
-                    if num_of_experience == 0:
-                        output_excel.at[row_of_output, 'התנסות א'] = experience_host
-                        output_excel.at[row_of_output, 'בית חולים א'] = hospital
-                        output_excel.at[row_of_output, 'תאריכים א'] = dates
-                        flag = True
+                    if student_num > 0:
+                        flag = False
+                        hospitals_excel.at[row, 'מספר סטודנטים'] = student_num - 1
+                        hospitals_excel.to_excel("Hospitals.xlsx", index=False)
+                        output_excel.at[row_of_output, 'תעודת זהות'] = s.id_num
+                        output_excel.at[row_of_output, 'שם מלא'] = s.name
+                        output_excel.at[row_of_output, 'עיר מגורים'] = s.city
+                        output_excel.at[row_of_output, 'שנה'] = s.year
 
-                    elif num_of_experience == 1:
-                        output_excel.at[row_of_output, 'התנסות ב'] = experience_host
-                        output_excel.at[row_of_output, 'בית חולים ב'] = hospital
-                        output_excel.at[row_of_output, 'תאריכים ב'] = dates
-                        flag = True
+                        if num_of_experience == 0:
+                            output_excel.at[row_of_output, 'התנסות א'] = experience_host
+                            output_excel.at[row_of_output, 'בית חולים א'] = hospital
+                            output_excel.at[row_of_output, 'תאריכים א'] = dates
+                            output_excel.at[row_of_output, 'איש קשר אחראי א'] = responsible_contact
+                            s.exp_dates.append(dates)
+                            flag = True
 
-                    elif num_of_experience == 2:
-                        output_excel.at[row_of_output, 'התנסות ג'] = experience_host
-                        output_excel.at[row_of_output, 'בית חולים ג'] = hospital
-                        output_excel.at[row_of_output, 'תאריכים ג'] = dates
-                        flag = True
+                        elif num_of_experience == 1:
+                            output_excel.at[row_of_output, 'התנסות ב'] = experience_host
+                            output_excel.at[row_of_output, 'בית חולים ב'] = hospital
+                            output_excel.at[row_of_output, 'תאריכים ב'] = dates
+                            output_excel.at[row_of_output, 'איש קשר אחראי ב'] = responsible_contact
+                            s.exp_dates.append(dates)
+                            flag = True
 
-                    elif num_of_experience == 3:
-                        output_excel.at[row_of_output, 'התנסות ד'] = experience_host
-                        output_excel.at[row_of_output, 'בית חולים ד'] = hospital
-                        output_excel.at[row_of_output, 'תאריכים ד'] = dates
-                        flag = True
+                        elif num_of_experience == 2:
+                            output_excel.at[row_of_output, 'התנסות ג'] = experience_host
+                            output_excel.at[row_of_output, 'בית חולים ג'] = hospital
+                            output_excel.at[row_of_output, 'תאריכים ג'] = dates
+                            output_excel.at[row_of_output, 'איש קשר אחראי ג'] = responsible_contact
+                            s.exp_dates.append(dates)
+                            flag = True
 
-                    else:
-                        output_excel.at[row_of_output, 'התנסות ה'] = experience_host
-                        output_excel.at[row_of_output, 'בית חולים ה'] = hospital
-                        output_excel.at[row_of_output, 'תאריכים ה'] = dates
-                        flag = True
+                        elif num_of_experience == 3:
+                            output_excel.at[row_of_output, 'התנסות ד'] = experience_host
+                            output_excel.at[row_of_output, 'בית חולים ד'] = hospital
+                            output_excel.at[row_of_output, 'תאריכים ד'] = dates
+                            output_excel.at[row_of_output, 'איש קשר אחראי ד'] = responsible_contact
+                            s.exp_dates.append(dates)
+                            flag = True
 
-                    if flag:
-                        num_of_experience += 1
-                        s.done.append(experience_host)
-                        # print(f"id num : {s.id_num}")
-                        # print(f" the list is : {s.to_do}")
-                        temp = []
-                        for exp in s.to_do:
-                            if exp != experience_host:
-                                temp.append(exp)
-                        s.to_do = temp
+                        else:
+                            output_excel.at[row_of_output, 'התנסות ה'] = experience_host
+                            output_excel.at[row_of_output, 'בית חולים ה'] = hospital
+                            output_excel.at[row_of_output, 'תאריכים ה'] = dates
+                            output_excel.at[row_of_output, 'איש קשר אחראי ה'] = responsible_contact
+                            s.exp_dates.append(dates)
+                            flag = True
 
-    #
+                        if flag:
+                            num_of_experience += 1
+                            s.done.append(experience_host)
+                            temp = []
+                            for exp in s.to_do:
+                                if exp != experience_host:
+                                    temp.append(exp)
+                            s.to_do = temp
+
     write_comment(s)
     row_of_output += 1
 
-output_excel.style.background_gradient(cmap='Greens')
+output_excel.to_excel("Demo.xlsx", index=False)
+
+writer = pandas.ExcelWriter('demo.xlsx')
+output_excel.to_excel(writer, sheet_name='Sheet1', index=False, na_rep='')
+
+
+# Auto-adjust columns' width
+
+for column in output_excel:
+    column_width = max(output_excel[column].astype(str).map(len).max(), len(column))
+    col_idx = output_excel.columns.get_loc(column)
+    writer.sheets['Sheet1'].set_column(col_idx, col_idx, column_width)
+
+
+# Get the xlsxwriter workbook and worksheet objects.
+workbook = writer.book
+worksheet = writer.sheets['Sheet1']
+
+
+# Set formats for colors . Light red fill with dark red text.
+format_experience_a = workbook.add_format({'bg_color': '#B73A3A', 'font_color': '#000000'}) #FF0000
+
+format_experience_b = workbook.add_format({'bg_color': '#23C26F', 'font_color': '#000000'}) # 00FF00
+
+format_experience_c = workbook.add_format({'bg_color': '#438FFF', 'font_color': '#000000'}) ##0000FF
+
+format_experience_d = workbook.add_format({'bg_color': 'D83B01', 'font_color': '#000000'}) ##00FFFF
+
+format_experience_e = workbook.add_format({'bg_color': '#FF72FF', 'font_color': '#000000'})
+
+format_comments = workbook.add_format({'bg_color': '#FFC7CE', 'font_color': '#9C0006'})
+
+
+# Set the conditional format range for comments.
+start_row = 1
+start_col = 24
+end_row = len(output_excel)
+end_cold = start_col
+
+# Apply a conditional format to the cell range.
+worksheet.conditional_format(start_row, start_col, end_row, end_cold,
+                             {'type':     'cell',
+                              'criteria': '==',
+                              'value':   '"בעיה - לא שובץ בכלום!"',
+                              'format':   format_comments})
+
+
+# Coloring experience A
+start_row = 0
+start_col = 4
+end_row = start_row
+end_col = 7
+
+# Apply a conditional format to the cell range.
+worksheet.conditional_format(start_row, start_col, end_row, end_col,
+                             {'type':     'cell',
+                              'criteria': '>',
+                              'value':   0,
+                              'format':   format_experience_a})
+
+
+# Coloring experience B
+
+start_row = 0
+start_col = 8
+end_row = start_row
+end_col = 11
+
+# Apply a conditional format to the cell range.
+worksheet.conditional_format(start_row, start_col, end_row, end_col,
+                             {'type':     'cell',
+                              'criteria': '>',
+                              'value':   0,
+                              'format':   format_experience_b})
+
+# Coloring experience C
+
+start_row = 0
+start_col = 12
+end_row = start_row
+end_col = 15
+
+# Apply a conditional format to the cell range.
+worksheet.conditional_format(start_row, start_col, end_row, end_col,
+                             {'type':     'cell',
+                              'criteria': '>',
+                              'value':   0,
+                              'format':   format_experience_c})
+
+# Coloring experience D
+
+start_row = 0
+start_col = 16
+end_row = start_row
+end_col = 19
+
+# Apply a conditional format to the cell range.
+worksheet.conditional_format(start_row, start_col, end_row, end_col,
+                             {'type':     'cell',
+                              'criteria': '>',
+                              'value':   0,
+                              'format':   format_experience_d})
+
+# Coloring experience E
+
+start_row = 0
+start_col = 20
+end_row = start_row
+end_col = 23
+
+# Apply a conditional format to the cell range.
+worksheet.conditional_format(start_row, start_col, end_row, end_col,
+                             {'type':     'cell',
+                              'criteria': '>',
+                              'value':   0,
+                              'format':   format_experience_e})
 
 
 # Close the Pandas Excel writer and output the Excel file.
-# output_excel.at[i, 'תעודת זהות'] = 207935214
-# print(output_excel.at[i, 'תעודת זהות'])
-# print(output_excel)
-# writer.save()
-output_excel.to_excel("Demo.xlsx", index=False)
-
-# start to Scheduling
+writer.save()

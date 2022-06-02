@@ -7,6 +7,7 @@ class Student:
         self.year = year
         self.to_do = to_do
         self.done = []
+        self.exp_dates = []
         self.cities_around_me = []
         self.list_of_potential_cities = list_of_potential_cities
 
